@@ -1,29 +1,45 @@
-name: CUDA Build & Run
+name: CUDA Neural Network CI
 
 on:
   push:
   workflow_dispatch:
 
 jobs:
-  cuda:
+  build-run:
     runs-on: ubuntu-latest
 
     container:
       image: nvidia/cuda:12.4.1-devel-ubuntu22.04
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Show system info
+        run: |
+          echo "===== SYSTEM INFO ====="
+          uname -a
+          lscpu | head -20
 
       - name: Install build tools
         run: |
           apt-get update
           apt-get install -y build-essential
 
-      - name: Compile CUDA
+      - name: Verify CUDA
         run: |
-          nvcc thread.cu -o program
+          echo "===== CUDA VERSION ====="
+          nvcc --version
 
-      - name: Run program
+      - name: Compile Neural Network
         run: |
-          ./program
+          echo "===== COMPILING CUDA ====="
+          nvcc thread.cu -O2 -o nn_train
+
+      - name: Run Training
+        run: |
+          echo "===== STARTING TRAINING ====="
+          ./nn_train
+
+      - name: Finished
+        run: echo "===== CI JOB COMPLETE ====="
