@@ -1,44 +1,70 @@
-#include iostream
+#include <iostream>
+#include <cuda_runtime.h>
+#include <chrono>
 
-__global__ void add(int a, int b, int c)
+#define THREADS 128
+#define BLOCKS 8
+#define MEMSIZE (1<<20)
+
+__global__ void schedulerDemo(int *buffer)
 {
-    int i = threadIdx.x;
-    c[i] = a[i] + b[i];
+    int globalId = blockIdx.x * blockDim.x + threadIdx.x;
+    int warp = threadIdx.x / 32;
+
+    if(globalId < MEMSIZE)
+        buffer[globalId] = globalId;
+
+    printf("[SM SIM] Block %d | Warp %d | Thread %d | GlobalID %d\n",
+           blockIdx.x, warp, threadIdx.x, globalId);
+}
+
+void deviceInfo()
+{
+    int count;
+    cudaGetDeviceCount(&count);
+
+    std::cout << "\n==== GPU DEVICE SCAN ====\n";
+    std::cout << "Detected devices: " << count << "\n\n";
+
+    for(int i=0;i<count;i++)
+    {
+        cudaDeviceProp prop;
+        cudaGetDeviceProperties(&prop, i);
+
+        std::cout << "Device " << i << ": " << prop.name << "\n";
+        std::cout << "Compute Capability: " << prop.major << "." << prop.minor << "\n";
+        std::cout << "Global Memory: " << prop.totalGlobalMem/(1024*1024) << " MB\n";
+        std::cout << "Multiprocessors: " << prop.multiProcessorCount << "\n";
+        std::cout << "Max Threads/Block: " << prop.maxThreadsPerBlock << "\n";
+        std::cout << "Warp Size: " << prop.warpSize << "\n\n";
+    }
 }
 
 int main()
 {
-    const int N = 8;
-    int a[N], b[N], c[N];
+    std::cout << "===== CUDA SYSTEM DIAGNOSTIC TOOL =====\n";
 
-    for(int i=0;iN;i++)
-    {
-        a[i] = i;
-        b[i] = ii;
-    }
+    deviceInfo();
 
-    int d_a, d_b, d_c;
+    std::cout << "\n[ALLOC] Reserving GPU memory...\n";
 
-    cudaMalloc((void)&d_a, Nsizeof(int));
-    cudaMalloc((void)&d_b, Nsizeof(int));
-    cudaMalloc((void)&d_c, Nsizeof(int));
+    int *d_mem;
+    cudaMalloc(&d_mem, MEMSIZE*sizeof(int));
 
-    cudaMemcpy(d_a, a, Nsizeof(int), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_b, b, Nsizeof(int), cudaMemcpyHostToDevice);
+    std::cout << "[RUN] Launching scheduler simulation\n";
 
-    add1, N(d_a, d_b, d_c);
+    auto start = std::chrono::high_resolution_clock::now();
 
+    schedulerDemo<<<BLOCKS, THREADS>>>(d_mem);
     cudaDeviceSynchronize();
 
-    cudaMemcpy(c, d_c, Nsizeof(int), cudaMemcpyDeviceToHost);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> diff = end-start;
 
-    stdcout  Resultn;
-    for(int i=0;iN;i++)
-        stdcout  a[i]   +   b[i]   =   c[i]  n;
+    std::cout << "\n[PERF] Kernel execution time: " << diff.count() << " sec\n";
 
-    cudaFree(d_a);
-    cudaFree(d_b);
-    cudaFree(d_c);
+    std::cout << "[FREE] Releasing memory\n";
+    cudaFree(d_mem);
 
-    return 0;
+    std::cout << "===== DIAGNOSTIC COMPLETE =====\n";
 }

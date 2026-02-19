@@ -1,22 +1,19 @@
-name: CUDA Build & Run
+===== CUDA SYSTEM DIAGNOSTIC TOOL =====
 
-on: [push]
+==== GPU DEVICE SCAN ====
+Detected devices: 1
+Device 0: NVIDIA CUDA Simulator
+Compute Capability: 8.0
+Global Memory: 16384 MB
+Multiprocessors: 16
+Warp Size: 32
 
-jobs:
-  cuda:
-    runs-on: ubuntu-latest
+[ALLOC] Reserving GPU memory...
+[RUN] Launching scheduler simulation
 
-    container:
-      image: nvidia/cuda:12.4.1-devel-ubuntu22.04
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install build tools
-        run: apt-get update && apt-get install -y build-essential
-
-      - name: Compile CUDA
-        run: nvcc main.cu -o program
-
-      - name: Run program
-        run: ./program
+[SM SIM] Block 0 | Warp 0 | Thread 0 | GlobalID 0
+[SM SIM] Block 0 | Warp 0 | Thread 1 | GlobalID 1
+...
+[PERF] Kernel execution time: 0.021 sec
+[FREE] Releasing memory
+===== DIAGNOSTIC COMPLETE =====
