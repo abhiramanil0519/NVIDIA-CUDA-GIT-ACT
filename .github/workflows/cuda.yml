@@ -22,7 +22,7 @@ jobs:
 
       - name: Compile CUDA
         run: |
-          nvcc main.cu -o program
+          nvcc thread.cu -o program
 
       - name: Run program
         run: |
