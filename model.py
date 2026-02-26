@@ -10,7 +10,7 @@ def sigmoid(x):
 def dsigmoid(y):
     return y * (1 - y)
 
-w1 = np.array([[0.5, -0.3],
+w1 = np.array([[0.5, -0.9],
                [0.8,  0.2]])
 
 w2 = np.array([0.1, -0.4])
